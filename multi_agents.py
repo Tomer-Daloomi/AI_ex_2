@@ -146,9 +146,9 @@ class MinmaxAgent(MultiAgentSearchAgent):
 
         agent = depth_counter % 2
 
-        legal_moves = game_state.get_agent_legal_actions()
+        legal_moves = game_state.get_legal_actions(agent)
 
-        successor_states = [game_state.generate_successor(action=action) for action in
+        successor_states = [game_state.generate_successor(agent_index=agent, action=action) for action in
                             legal_moves]
 
         if agent == 0:
@@ -178,7 +178,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         successor_states = [game_state.generate_successor(action=action) for action in legal_moves]
 
         for successor in successor_states:
-            depth_counter = 1
+            depth_counter = self.depth*2 - 1
             move = self.alpha_beta(successor, depth_counter, alpha=(- np.infty),
                                    beta=np.infty)
 
@@ -204,21 +204,21 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         :return:
         """
 
-        if depth_counter == self.depth * 2 - 1 or game_state.get_legal_actions(0) == [] or \
+        if depth_counter == 0 or game_state.get_legal_actions(0) == [] or \
                         game_state.get_legal_actions(1) == []:
             return score_evaluation_function(game_state)
 
         agent = depth_counter % 2
 
-        legal_moves = game_state.get_agent_legal_actions()
+        legal_moves = game_state.get_legal_actions(agent)
 
-        successor_states = [game_state.generate_successor(action=action) for action in
+        successor_states = [game_state.generate_successor(agent_index=agent, action=action) for action in
                             legal_moves]
 
         if agent == 0:
             v = - np.infty
             for successor in successor_states:
-                v = max(v, self.alpha_beta(successor, depth_counter + 1, alpha, beta))
+                v = max(v, self.alpha_beta(successor, depth_counter - 1, alpha, beta))
                 alpha = max(v, alpha)
                 if beta <= alpha:
                     break
@@ -227,7 +227,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         if agent == 1:
             v = np.infty
             for successor in successor_states:
-                v = min(v, self.alpha_beta(successor, depth_counter + 1, alpha, beta))
+                v = min(v, self.alpha_beta(successor, depth_counter - 1, alpha, beta))
                 beta = min(v, alpha)
                 if beta <= alpha:
                     break
