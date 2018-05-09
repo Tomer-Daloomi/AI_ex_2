@@ -46,18 +46,24 @@ class ReflexAgent(Agent):
         """
 
         successor_game_state = current_game_state.generate_successor(action=action)
-        board = successor_game_state.board
         score = successor_game_state.score
+        return monotonic_evaluation_function(successor_game_state) + score
 
-        # potentially useful characteristics for determining the overall score by which we would
-        # like to advance :
-
-        max_tile = successor_game_state.max_tile
-        min_tile = np.min(board[np.nonzero(board)])
-        num_of_empty_tiles = len(successor_game_state.get_empty_tiles())
-
-        return score
-
+        # board = successor_game_state.board
+        #
+        #
+        # # potentially useful characteristics for determining the overall score by which we would
+        # # like to advance :
+        # corners_max = sum([board[0,0], board[successor_game_state._num_of_rows-1,0], board[0,successor_game_state._num_of_columns-1], board[successor_game_state._num_of_rows-1,successor_game_state._num_of_columns-1]])
+        #
+        #
+        # max_tile = successor_game_state.max_tile
+        # min_tile = np.min(board[np.nonzero(board)])
+        # num_of_empty_tiles = len(successor_game_state.get_empty_tiles())
+        #
+        # # return score
+        # return score + corners_max + num_of_empty_tiles
+        #
 
 def score_evaluation_function(current_game_state):
     """
@@ -258,8 +264,62 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         The opponent should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        """*** YOUR CODE HERE ***"""
-        util.raiseNotDefined()
+        # we'll use this list to collect the minmax returned value for the best score
+        best_moves = []
+
+        # Collect legal moves and successor states
+        legal_moves = game_state.get_agent_legal_actions()
+
+        # Choose one of the best actions
+        successor_states = [game_state.generate_successor(action=action) for action in legal_moves]
+
+        # we first expand all the possible game state successors for our agent, and only then use
+        # the minimax algorithm over each of them, so that eventually, when the minimax algorithm
+        #  will return the maximal value over depth 'n' of each branch (each successor),
+        # we could use it to determine which successor is the best one.
+        for successor in successor_states:
+            depth_counter = 1
+            best_moves.append(self.expectimax_val(successor, depth_counter))
+
+        best_choice = max(best_moves)
+        best_indices = [index for index in range(len(best_moves)) if best_moves[index] == best_choice]
+        chosen_index = np.random.choice(best_indices)  # Pick randomly among the best
+
+        return legal_moves[chosen_index]
+
+    def expectimax_val(self, game_state, depth_counter):
+        """
+        executes the expectimax recursive algorithm over a given game state, and returns the value
+        of the highest valued leaf of the tree within the given depth bounds
+
+        :param game_state:
+        :param depth_counter:
+        :return:
+        """
+
+        if depth_counter == self.depth * 2 - 1 or game_state.get_legal_actions(0) == [] or \
+                game_state.get_legal_actions(1) == []:
+            return score_evaluation_function(game_state)
+
+        agent = depth_counter % 2  # determines whether the agent is us or the opponent
+
+        legal_moves = game_state.get_legal_actions(agent)  # returns the legal moves for the
+        # relevant agent
+
+        # creates a list of all the successors for the relevant agent
+        successor_states = [game_state.generate_successor(agent_index=agent, action=action)
+                            for action in legal_moves]
+
+        # if the agent is us - we shall return the maximal value over all possible future
+        # game scores. This will help us choose the best direction towards which we should
+        # advance from the current state of the game.
+        if agent == 0:
+            return max([self.expectimax_val(game_state, depth_counter + 1) for game_state in
+                        successor_states])
+        # if the agent is the opponent - return the average of current child nodes
+        else:
+            return sum([self.expectimax_val(game_state, depth_counter + 1) for game_state in
+                        successor_states])//len(successor_states)
 
 
 def better_evaluation_function(current_game_state):
@@ -270,6 +330,31 @@ def better_evaluation_function(current_game_state):
     """
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
+
+
+def monotonic_evaluation_function(game_state):
+    board = game_state.board
+    score = 0
+    rows = np.diff(board, axis=1)>=0
+    columns = np.diff(board, axis=0)>=0
+    for i in range(game_state._num_of_rows-1):
+        if False not in rows[i]:
+            score +=1
+        if False not in columns[i]:
+            score+=1
+    return score
+
+def smoothness_evaluation_function(game_state):
+    board = game_state.board
+    score = 0
+    rows = np.diff(board, axis=1)>=0
+    columns = np.diff(board, axis=0)>=0
+    for i in range(game_state._num_of_rows-1):
+        if False not in rows[i]:
+            score +=1
+        if False not in columns[i]:
+            score+=1
+    return score
 
 
 # Abbreviation
