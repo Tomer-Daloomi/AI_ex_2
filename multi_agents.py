@@ -231,7 +231,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
                     break
             return v
 
-        if agent == 1:
+        else:
             v = np.infty
             for successor in successor_states:
                 v = min(v, self.alpha_beta(successor, depth_counter - 1, alpha, beta))
