@@ -46,25 +46,13 @@ class ReflexAgent(Agent):
         """
 
         successor_game_state = current_game_state.generate_successor(action=action)
-        # score = successor_game_state.score
+        score = smoothness_heuristic(successor_game_state) + \
+                monotonic_heuristic(successor_game_state)
         num_of_empty_tiles = len(successor_game_state.get_empty_tiles())
-        empty_tiles_penalty = (successor_game_state._num_of_rows * successor_game_state._num_of_columns) - num_of_empty_tiles
-        return smoothness_evaluation_function(successor_game_state) + monotonic_evaluation_function(successor_game_state) #- empty_tiles_penalty
+        empty_tiles_penalty = (successor_game_state._num_of_rows *
+                               successor_game_state._num_of_columns) - num_of_empty_tiles
+        return score
 
-        # board = successor_game_state.board
-        #
-        #
-        # # potentially useful characteristics for determining the overall score by which we would
-        # # like to advance :
-        # corners_max = sum([board[0,0], board[successor_game_state._num_of_rows-1,0], board[0,successor_game_state._num_of_columns-1], board[successor_game_state._num_of_rows-1,successor_game_state._num_of_columns-1]])
-        #
-        #
-        # max_tile = successor_game_state.max_tile
-        # min_tile = np.min(board[np.nonzero(board)])
-        #
-        # # return score
-        # return score + corners_max + num_of_empty_tiles
-        #
 
 def score_evaluation_function(current_game_state):
     """
@@ -327,32 +315,53 @@ def better_evaluation_function(current_game_state):
     """
     Your extreme 2048 evaluation function (question 5).
 
-    DESCRIPTION: <write something here so we know what you did>
+    DESCRIPTION: We decided to use a hybridization of the "monotonic heuristic" and the
+    "smoothness_heuristic" (see function documentation of both for farther understanding),
+    due to the fact that while the smoothness heuristic consistently returns scores that are
+    higher than 7,000 , the monotonic heuristic tends to return a better "highest tile" and
+    often also very high scores (relative to the depth 2 restriction of the alpha beta pruning)
     """
 
-    return monotonic_evaluation_function(current_game_state) + smoothness_evaluation_function(current_game_state)
+    return monotonic_heuristic(current_game_state) + smoothness_heuristic(current_game_state)
 
 
+def monotonic_heuristic(game_state):
+    """
+    the heuristic examines the monotony of the rows and columns of the rows and columns of the
+    matrix tht represents the game board, and returns a score - based on the amount of
+    rows/columns that were monotonically ascending/descending
 
+    :param game_state:
+    :return:number rows/columns that were monotonically ascending/descending
+    """
 
-
-def monotonic_evaluation_function(game_state):
     board = game_state.board
     score = 0
-    rows = np.diff(board, axis=1)>=0
-    columns = np.diff(board, axis=0)>=0
-    for i in range(game_state._num_of_rows-1):
+    rows = np.diff(board, axis=1) >= 0
+    columns = np.diff(board, axis=0) >= 0
+
+    for i in range(game_state._num_of_rows - 1):
         if False not in rows[i]:
             score +=1
         if False not in columns[i]:
-            score+=1
+            score += 1
+
     return score
 
-def smoothness_evaluation_function(game_state):
+
+def smoothness_heuristic(game_state):
+    """
+    the heuristic examines the number of identical adjacent tiles on the game board.
+
+    :param game_state:
+    :return: number of identical adjacent tiles
+    """
+
     board = game_state.board
-    rows = np.sum(np.diff(board, axis=1)==0)
-    columns = np.sum(np.diff(board, axis=0)==0)
-    return rows+columns
+    rows = np.sum(np.diff(board, axis=1) == 0)
+    columns = np.sum(np.diff(board, axis=0) == 0)
+
+    return rows + columns
 
 
 # Abbreviation
