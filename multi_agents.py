@@ -113,13 +113,20 @@ class MinmaxAgent(MultiAgentSearchAgent):
         game_state.generate_successor(agent_index, action):
             Returns the successor game state after an agent takes an action
         """
+
         # we'll use this list to collect the minmax returned value for the best score
         best_moves = []
+
         # Collect legal moves and successor states
         legal_moves = game_state.get_agent_legal_actions()
+
         # Choose one of the best actions
         successor_states = [game_state.generate_successor(action=action) for action in legal_moves]
 
+        # we first expand all the possible game state successors for our agent, and only then use
+        # the minimax algorithm over each of them, so that eventually, when the minimax algorithm
+        #  will return the maximal value over depth 'n' of each branch (each successor),
+        # we could use it to determine which successor is the best one.
         for successor in successor_states:
             depth_counter = 1
             best_moves.append(self.minimax_val(successor, depth_counter))
@@ -133,31 +140,36 @@ class MinmaxAgent(MultiAgentSearchAgent):
     def minimax_val(self, game_state, depth_counter):
         """
         executes the minimax recursive algorithm over a given game state, and returns the value
-        of the highest leaf of the tree out of the given depth
-        mashehu
+        of the highest valued leaf of the tree within the given depth bounds
+
         :param game_state:
         :param depth_counter:
         :return:
         """
 
         if depth_counter == self.depth * 2 - 1 or game_state.get_legal_actions(0) == [] or \
-                        game_state.get_legal_actions(1) == []:
+           game_state.get_legal_actions(1) == []:
             return score_evaluation_function(game_state)
 
-        agent = depth_counter % 2
+        agent = depth_counter % 2  # determines whether the agent is us or the opponent
 
-        legal_moves = game_state.get_legal_actions(agent)
+        legal_moves = game_state.get_legal_actions(agent)  # returns the legal moves for the
+        # relevant agent
 
-        successor_states = [game_state.generate_successor(agent_index=agent, action=action) for action in
-                            legal_moves]
+        # creates a list of all the successors for the relevant agent
+        successor_states = [game_state.generate_successor(agent_index=agent, action=action)
+                            for action in legal_moves]
 
+        # if the agent is us - we shall return the maximal value over all possible future
+        # game scores. This will help us choose the best direction towards which we should
+        # advance from the current state of the game.
         if agent == 0:
             return max([self.minimax_val(game_state, depth_counter + 1) for game_state in
-                              successor_states])
-
-        if agent == 1:
+                        successor_states])
+        # if the agent is the opponent - the contrary reason is applied
+        else:
             return min([self.minimax_val(game_state, depth_counter + 1) for game_state in
-                               successor_states])
+                        successor_states])
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
@@ -181,7 +193,7 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
             depth_counter = self.depth*2 - 1
             move = self.alpha_beta(successor, depth_counter, alpha=(- np.infty),
                                    beta=np.infty)
-
+            # these two following lines take care of the returned value after pruning was executed
             if move is not None:
                 best_moves.append(move)
 
@@ -194,9 +206,9 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
     def alpha_beta(self, game_state, depth_counter, alpha, beta):
         """
-        executes the minimax recursive algorithm over a given game state, and returns the value
-        of the highest leaf of the tree out of the given depth
-        mashehu
+        executes the alpha beta pruning recursive algorithm over a given game state, and returns
+        the value of the highest valued leaf of the tree within the given depth bounds
+
         :param game_state:
         :param depth_counter:
         :param alpha
@@ -212,8 +224,8 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         legal_moves = game_state.get_legal_actions(agent)
 
-        successor_states = [game_state.generate_successor(agent_index=agent, action=action) for action in
-                            legal_moves]
+        successor_states = [game_state.generate_successor(agent_index=agent, action=action) for
+                            action in legal_moves]
 
         if agent == 0:
             v = - np.infty
