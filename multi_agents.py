@@ -134,7 +134,7 @@ class MinmaxAgent(MultiAgentSearchAgent):
         """
         executes the minimax recursive algorithm over a given game state, and returns the value
         of the highest leaf of the tree out of the given depth
-
+        mashehu
         :param game_state:
         :param depth_counter:
         :return:
