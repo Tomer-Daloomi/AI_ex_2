@@ -46,8 +46,10 @@ class ReflexAgent(Agent):
         """
 
         successor_game_state = current_game_state.generate_successor(action=action)
-        score = successor_game_state.score
-        return monotonic_evaluation_function(successor_game_state) + score
+        # score = successor_game_state.score
+        num_of_empty_tiles = len(successor_game_state.get_empty_tiles())
+        empty_tiles_penalty = (successor_game_state._num_of_rows * successor_game_state._num_of_columns) - num_of_empty_tiles
+        return smoothness_evaluation_function(successor_game_state) + monotonic_evaluation_function(successor_game_state) #- empty_tiles_penalty
 
         # board = successor_game_state.board
         #
@@ -59,7 +61,6 @@ class ReflexAgent(Agent):
         #
         # max_tile = successor_game_state.max_tile
         # min_tile = np.min(board[np.nonzero(board)])
-        # num_of_empty_tiles = len(successor_game_state.get_empty_tiles())
         #
         # # return score
         # return score + corners_max + num_of_empty_tiles
@@ -328,8 +329,11 @@ def better_evaluation_function(current_game_state):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    return monotonic_evaluation_function(current_game_state) + smoothness_evaluation_function(current_game_state)
+
+
+
 
 
 def monotonic_evaluation_function(game_state):
@@ -346,15 +350,9 @@ def monotonic_evaluation_function(game_state):
 
 def smoothness_evaluation_function(game_state):
     board = game_state.board
-    score = 0
-    rows = np.diff(board, axis=1)>=0
-    columns = np.diff(board, axis=0)>=0
-    for i in range(game_state._num_of_rows-1):
-        if False not in rows[i]:
-            score +=1
-        if False not in columns[i]:
-            score+=1
-    return score
+    rows = np.sum(np.diff(board, axis=1)==0)
+    columns = np.sum(np.diff(board, axis=0)==0)
+    return rows+columns
 
 
 # Abbreviation
