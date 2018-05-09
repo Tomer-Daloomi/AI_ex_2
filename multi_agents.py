@@ -169,8 +169,69 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
-        """*** YOUR CODE HERE ***"""
-        util.raiseNotDefined()
+
+        # we'll use this list to collect the minmax returned value for the best score
+        best_moves = []
+        # Collect legal moves and successor states
+        legal_moves = game_state.get_agent_legal_actions()
+        # Choose one of the best actions
+        successor_states = [game_state.generate_successor(action=action) for action in legal_moves]
+
+        for successor in successor_states:
+            depth_counter = 1
+            move = self.alpha_beta(successor, depth_counter, alpha=(- np.infty),
+                                   beta=np.infty)
+
+            if move is not None:
+                best_moves.append(move)
+
+        best_choice = max(best_moves)
+        best_indices = [index for index in range(len(best_moves)) if
+                        best_moves[index] == best_choice]
+        chosen_index = np.random.choice(best_indices)  # Pick randomly among the best
+
+        return legal_moves[chosen_index]
+
+    def alpha_beta(self, game_state, depth_counter, alpha, beta):
+        """
+        executes the minimax recursive algorithm over a given game state, and returns the value
+        of the highest leaf of the tree out of the given depth
+        mashehu
+        :param game_state:
+        :param depth_counter:
+        :param alpha
+        :param beta
+        :return:
+        """
+
+        if depth_counter == self.depth * 2 - 1 or game_state.get_legal_actions(0) == [] or \
+                        game_state.get_legal_actions(1) == []:
+            return score_evaluation_function(game_state)
+
+        agent = depth_counter % 2
+
+        legal_moves = game_state.get_agent_legal_actions()
+
+        successor_states = [game_state.generate_successor(action=action) for action in
+                            legal_moves]
+
+        if agent == 0:
+            v = - np.infty
+            for successor in successor_states:
+                v = max(v, self.alpha_beta(successor, depth_counter + 1, alpha, beta))
+                alpha = max(v, alpha)
+                if beta <= alpha:
+                    break
+            return v
+
+        if agent == 1:
+            v = np.infty
+            for successor in successor_states:
+                v = min(v, self.alpha_beta(successor, depth_counter + 1, alpha, beta))
+                beta = min(v, alpha)
+                if beta <= alpha:
+                    break
+            return v
 
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
